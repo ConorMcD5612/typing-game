@@ -70,7 +70,12 @@ add_definitions(-DGLFW_INCLUDE_NONE
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
                                ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
-                               ${VENDORS_SOURCES})
+                               ${VENDORS_SOURCES}
+        src/shapes/arrow.cpp
+        src/shapes/arrow.h
+        src/game.cpp
+        src/game.h
+)
 
 target_link_libraries(${PROJECT_NAME} glfw freetype)
 

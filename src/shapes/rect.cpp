@@ -23,22 +23,28 @@ Rect::~Rect() {
 
 void Rect::draw() const {
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
 void Rect::initVectors() {
     this->vertices.insert(vertices.end(), {
-        // TODO: Add other three corners here
-            -0.5f, 0.5f,   // Top left
-            0.5f, 0.5f,   // Top right
+            //rectangle
+            -0.5f,  0.5f,  // Top left
+            0.5f,  0.5f,  // Top right
             -0.5f, -0.5f,  // Bottom left
-            0.5f, -0.5f   // Bottom right
+            0.5f, -0.5f,  // Bottom right
+
+            // triangle head
+            0.5f,  1.0f,
+            0.5f,  -1.0f,
+            1.0f,  0.0f
     });
 
     this->indices.insert(indices.end(), {
-        0, 1, 2, // First triangle
-        1, 2, 3  // Second triangle
+            0, 1, 2, //rect
+            1, 2, 3, //rect
+            4, 5, 6  //head
     });
 }
 // Overridden Getters from Shape

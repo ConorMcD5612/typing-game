@@ -1,7 +1,12 @@
 #include "engine.h"
+#include "../shapes/arrow.h"
 
+Engine* Engine::instance = nullptr;
 enum state {start, play, over};
 state screen;
+static int arrowNum = 0;
+
+color opaque = {0,0,0,0};
 
 // Colors
 color originalFill, hoverFill, pressFill;
@@ -10,6 +15,7 @@ Engine::Engine() : keys() {
     this->initWindow();
     this->initShaders();
     this->initShapes();
+    instance = this;
 
     originalFill = {1, 0, 0, 1};
     hoverFill.vec = originalFill.vec + vec4{0.5, 0.5, 0.5, 0};
@@ -46,6 +52,9 @@ unsigned int Engine::initWindow(bool debug) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSwapInterval(1);
 
+    glfwSetKeyCallback(window, key_callback);
+
+
     return 0;
 }
 
@@ -67,13 +76,37 @@ void Engine::initShaders() {
 
 void Engine::initShapes() {
     // red spawn button centered in the top left corner
-    square = make_unique<Rect>(shapeShader, vec2{width/2,height/2}, vec2{100, 100}, color{1, 0, 0, 1});
+    float x = 200;
+    float y= 100;
+    float pivot_x = x;
+    float pivot_y = y + 80.0f;
+
+//    arrow = make_unique<Arrow>(shapeShader, vec2{width/2,height/2}, vec2{200, 100}, color{1, 0, 0, 1});
+
+    vec2 pos = {0, height/2};
+    vec2 size = {30, 20};
+
+    for(int i = 0; i < 5; i++)
+    {
+
+        //hover squares are opacity 0 until hovered
+        level1.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x + 5, size.y + 5}, color{1, 0, 0, 1}, DOWN));
+        pos.x += 50;
+    }
+
+    level1.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x + 5, size.y + 5}, color{1, 0, 0, 1}, UP));
+    pos.x +=50;
+    level1.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x + 5, size.y + 5}, color{1, 0, 0, 1}, RIGHT));
+    pos.x +=50;
+    level1.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x + 5, size.y + 5}, color{1, 0, 0, 1}, LEFT));
+
 }
 
 void Engine::processInput() {
+
     glfwPollEvents();
-    cout << confetti.size() << endl;
-    // Set keys to true if pressed, false if released
+
+     //Set keys to true if pressed, false if released
     for (int key = 0; key < 1024; ++key) {
         if (glfwGetKey(window, key) == GLFW_PRESS)
             keys[key] = true;
@@ -81,22 +114,27 @@ void Engine::processInput() {
             keys[key] = false;
     }
 
+
     // Close window if escape key is pressed
     if (keys[GLFW_KEY_ESCAPE])
         glfwSetWindowShouldClose(window, true);
 
-    // Mouse position saved to check for collisions
-    glfwGetCursorPos(window, &MouseX, &MouseY);
 
+    if(keys[GLFW_KEY_UP] && level1[arrowNum]->getDirection() == UP){
+        level1[arrowNum]->setColor(opaque);
+        arrowNum++;
+    }
 
+    cout << arrowNum;
 
+    bool downPressed = keys[GLFW_KEY_DOWN] == GLFW_PRESS;
 
-    // TODO: Make sure the spawnButton cannot go off the screen
-
-    // Mouse position is inverted because the origin of the window is in the top left corner
-    MouseY = height - MouseY; // Invert y-axis of mouse position
-
-
+//    if( downPressedLastFrame != downPressed && level1[arrowNum]->getDirection() == DOWN){
+//
+//    }
+//
+//
+//    downPressedLastFrame = keys[GLFW_KEY_DOWN];
 }
 
 void Engine::update() {
@@ -116,20 +154,14 @@ void Engine::render() {
     // Set shader to use for all shapes
     shapeShader.use();
 
-    string message = "Directions: clicking a yellow square will light up adjacent squares.";
-    string message2 =  "To win turn all yellow squares (on) into gray squares (off)";
-    string message3 = "Press 'S' to start the game!";
-    float xPos = 0;
-    for(char character : message)
+//    arrow->setUniforms();
+//    arrow->draw();
+
+    for(int i = 0; i < level1.size(); i++)
     {
-        this->fontRenderer->renderText(std::to_string(character), xPos, (height/1.5)+25*sin(glfwGetTime()), .5, vec3{1, 1, 1});
-        xPos +=50;
+        level1[i]->setUniforms();
+        level1[i]->draw();
     }
-
-
-    this->fontRenderer->renderText(message2, 0, (height/1.5)-20, .5, vec3{1, 1, 1});
-    this->fontRenderer->renderText(message3 ,0, (height/1.5)-40, .5, vec3{1, 1, 1});
-
 
 
     glfwSwapBuffers(window);
@@ -139,4 +171,15 @@ void Engine::render() {
 
 bool Engine::shouldClose() {
     return glfwWindowShouldClose(window);
+}
+
+void Engine::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+    {
+        cout << "YO" << endl;
+        //need instance to interact in static function
+        instance->level1[arrowNum]->setColor(opaque);
+        arrowNum++;
+    }`
 }

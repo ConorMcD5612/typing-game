@@ -10,6 +10,7 @@
 #include "fontRenderer.h"
 #include "../shapes/rect.h"
 #include "../shapes/shape.h"
+#include "../shapes/arrow.h"
 #include "debug.h"
 
 using std::vector, std::unique_ptr, std::make_unique, glm::ortho, glm::mat4, glm::vec3, glm::vec4;
@@ -30,6 +31,8 @@ class Engine {
         /// @details Index this array with GLFW_KEY_{key} to get the state of a key.
         bool keys[1024];
 
+        static Engine* instance;
+
         /// @brief Responsible for loading and storing all the shaders used in the project.
         /// @details Initialized in initShaders()
         unique_ptr<ShaderManager> shaderManager;
@@ -39,8 +42,8 @@ class Engine {
         unique_ptr<FontRenderer> fontRenderer;
 
         // Shapes
-        unique_ptr<Rect> square;
-        vector<unique_ptr<Shape>> confetti;
+        unique_ptr<Arrow> arrow;
+        vector<unique_ptr<Arrow>> level1;
 
         // Shaders
         Shader shapeShader;
@@ -48,6 +51,7 @@ class Engine {
 
         double MouseX, MouseY;
         bool mousePressedLastFrame = false;
+        bool downPressedLastFrame = false;
 
     public:
         /// @brief Constructor for the Engine class.
@@ -86,6 +90,8 @@ class Engine {
         /* deltaTime variables */
         float deltaTime = 0.0f; // Time between current frame and last frame
         float lastFrame = 0.0f; // Time of last frame (used to calculate deltaTime)
+
+        static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
         // -----------------------------------
         // Getters
