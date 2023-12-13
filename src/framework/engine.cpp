@@ -80,7 +80,7 @@ void Engine::initShapes() {
     Direction randDirection;
 
     //later levels have more arrows
-    for(int i = 0; i < 10 + currentLevel * 3; i++)
+    for(int i = 0; i < 10 + currentLevel * 2; i++)
     {
         randDirection = Direction((rand() % 4));
 
@@ -157,7 +157,7 @@ void Engine::render() {
             }
 
             fontRenderer->renderText(timeString, (width/2)-80, (height/2)-115, 1, vec3{1, 1, 1});
-
+            fontRenderer->renderText(levelString, (width/2)-120, (height/2)+135, 1.5, vec3{1, 1, 1});
             //animation
             if(currentLevel == 4){
                 for(int i = 0; i < arrows.size(); i++)
@@ -168,7 +168,6 @@ void Engine::render() {
                         arrows[i]->setPosY(height/2);
                     }
                 }
-                cout << glfwGetTime();
             }
 
             if(currentLevel == 5){
@@ -201,7 +200,7 @@ void Engine::render() {
     }
 
 
-    fontRenderer->renderText(levelString, (width/2)-120, (height/2)+135, 1.5, vec3{1, 1, 1});
+
 
 
     glfwSwapBuffers(window);
