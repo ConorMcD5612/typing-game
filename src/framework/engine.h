@@ -41,17 +41,23 @@ class Engine {
         /// @details Initialized in initShaders()
         unique_ptr<FontRenderer> fontRenderer;
 
-        // Shapes
-        unique_ptr<Arrow> arrow;
-        vector<unique_ptr<Arrow>> level1;
+        //
+
+        //arrow vector
+        vector<unique_ptr<Arrow>> arrows;
+
+        //rects
+        unique_ptr<Rect> bgRect;
+        unique_ptr<Rect> opaqueRect;
+
+        //for moving on x axis responsivly
+        float xPixel = ((width/2)/5)+50;
+
 
         // Shaders
         Shader shapeShader;
         Shader textShader;
 
-        double MouseX, MouseY;
-        bool mousePressedLastFrame = false;
-        bool downPressedLastFrame = false;
 
     public:
         /// @brief Constructor for the Engine class.
@@ -72,9 +78,6 @@ class Engine {
         /// @brief Initializes the shapes to be rendered.
         void initShapes();
 
-        /// @brief Pushes back a new colored rectangle to the confetti vector.
-        void spawnConfetti();
-
         /// @brief Processes input from the user.
         /// @details (e.g. keyboard input, mouse input, etc.)
         void processInput();
@@ -90,8 +93,9 @@ class Engine {
         /* deltaTime variables */
         float deltaTime = 0.0f; // Time between current frame and last frame
         float lastFrame = 0.0f; // Time of last frame (used to calculate deltaTime)
+        float totalTime = 60.0f; // countdown time
 
-        static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+        static void keyCallBack(GLFWwindow* window, int key, int scancode, int action, int mods);
 
         // -----------------------------------
         // Getters

@@ -34,17 +34,11 @@ void Rect::initVectors() {
             0.5f,  0.5f,  // Top right
             -0.5f, -0.5f,  // Bottom left
             0.5f, -0.5f,  // Bottom right
-
-            // triangle head
-            0.5f,  1.0f,
-            0.5f,  -1.0f,
-            1.0f,  0.0f
     });
 
     this->indices.insert(indices.end(), {
             0, 1, 2, //rect
             1, 2, 3, //rect
-            4, 5, 6  //head
     });
 }
 // Overridden Getters from Shape

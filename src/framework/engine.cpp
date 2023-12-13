@@ -1,25 +1,24 @@
 #include "engine.h"
 #include "../shapes/arrow.h"
 
+//need this for call back function
 Engine* Engine::instance = nullptr;
-enum state {start, play, over};
+
+enum state {play, won, lose};
 state screen;
+
 static int arrowNum = 0;
+static int currentLevel = 1;
 
 color opaque = {0,0,0,0};
 
-// Colors
-color originalFill, hoverFill, pressFill;
+using namespace std;
 
 Engine::Engine() : keys() {
     this->initWindow();
     this->initShaders();
     this->initShapes();
     instance = this;
-
-    originalFill = {1, 0, 0, 1};
-    hoverFill.vec = originalFill.vec + vec4{0.5, 0.5, 0.5, 0};
-    pressFill.vec = originalFill.vec - vec4{0.5, 0.5, 0.5, 0};
 }
 
 Engine::~Engine() {}
@@ -52,8 +51,7 @@ unsigned int Engine::initWindow(bool debug) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSwapInterval(1);
 
-    glfwSetKeyCallback(window, key_callback);
-
+    glfwSetKeyCallback(window, keyCallBack);
 
     return 0;
 }
@@ -75,31 +73,24 @@ void Engine::initShaders() {
 }
 
 void Engine::initShapes() {
-    // red spawn button centered in the top left corner
-    float x = 200;
-    float y= 100;
-    float pivot_x = x;
-    float pivot_y = y + 80.0f;
+    srand(time(NULL));
 
-//    arrow = make_unique<Arrow>(shapeShader, vec2{width/2,height/2}, vec2{200, 100}, color{1, 0, 0, 1});
-
-    vec2 pos = {0, height/2};
+    vec2 pos = {width/2, height/2};
     vec2 size = {30, 20};
+    Direction randDirection;
 
-    for(int i = 0; i < 5; i++)
+    //later levels have more arrows
+    for(int i = 0; i < 10 + currentLevel * 3; i++)
     {
+        randDirection = Direction((rand() % 4));
 
-        //hover squares are opacity 0 until hovered
-        level1.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x + 5, size.y + 5}, color{1, 0, 0, 1}, DOWN));
-        pos.x += 50;
+        arrows.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x, size.y}, color{1, 0, 0, 1}, randDirection));
+        pos.x += xPixel;
     }
 
-    level1.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x + 5, size.y + 5}, color{1, 0, 0, 1}, UP));
-    pos.x +=50;
-    level1.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x + 5, size.y + 5}, color{1, 0, 0, 1}, RIGHT));
-    pos.x +=50;
-    level1.push_back(std::make_unique<Arrow>(shapeShader, pos, vec2{size.x + 5, size.y + 5}, color{1, 0, 0, 1}, LEFT));
-
+    //rects
+    bgRect = make_unique<Rect>(shapeShader, vec2{width/2,height/2}, vec2{120,120}, color{1,1,1, 1});
+    opaqueRect = make_unique<Rect>(shapeShader,vec2{width/2,height/2}, vec2{115,115}, color{0,0,0, 1} );
 }
 
 void Engine::processInput() {
@@ -114,27 +105,10 @@ void Engine::processInput() {
             keys[key] = false;
     }
 
-
     // Close window if escape key is pressed
     if (keys[GLFW_KEY_ESCAPE])
         glfwSetWindowShouldClose(window, true);
 
-
-    if(keys[GLFW_KEY_UP] && level1[arrowNum]->getDirection() == UP){
-        level1[arrowNum]->setColor(opaque);
-        arrowNum++;
-    }
-
-    cout << arrowNum;
-
-    bool downPressed = keys[GLFW_KEY_DOWN] == GLFW_PRESS;
-
-//    if( downPressedLastFrame != downPressed && level1[arrowNum]->getDirection() == DOWN){
-//
-//    }
-//
-//
-//    downPressedLastFrame = keys[GLFW_KEY_DOWN];
 }
 
 void Engine::update() {
@@ -143,7 +117,12 @@ void Engine::update() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
+    //setting screens when conditons are met
+    if(currentLevel > 5)
+        screen = won;
 
+    if(totalTime - glfwGetTime() < 0)
+        screen = lose;
 
 }
 
@@ -151,17 +130,78 @@ void Engine::render() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color
     glClear(GL_COLOR_BUFFER_BIT);
 
+
+    int time = totalTime - glfwGetTime();;
+    string timeString = "Time:" + to_string(time);
+    string levelString = "Level:" + to_string(currentLevel);
+
+
     // Set shader to use for all shapes
     shapeShader.use();
 
-//    arrow->setUniforms();
-//    arrow->draw();
+    switch(screen) {
+        case play:
+            //drawing rects and arrows
 
-    for(int i = 0; i < level1.size(); i++)
-    {
-        level1[i]->setUniforms();
-        level1[i]->draw();
+
+            bgRect->setUniforms();
+            bgRect->draw();
+
+            opaqueRect->setUniforms();
+            opaqueRect->draw();
+
+            for(int i = 0; i < arrows.size(); i++)
+            {
+                arrows[i]->setUniforms();
+                arrows[i]->draw();
+            }
+
+            fontRenderer->renderText(timeString, (width/2)-80, (height/2)-115, 1, vec3{1, 1, 1});
+
+            //animation
+            if(currentLevel == 4){
+                for(int i = 0; i < arrows.size(); i++)
+                {
+                    if(arrowNum != i){
+                        arrows[i]->moveY(sin(glfwGetTime() + .90 ));
+                    } else {
+                        arrows[i]->setPosY(height/2);
+                    }
+                }
+                cout << glfwGetTime();
+            }
+
+            if(currentLevel == 5){
+
+                //animation just cause
+                for(int i = 0; i < arrows.size(); i++)
+                {
+                    if(arrowNum != i){
+                        if(arrows[i]->getPosY() < height/2 + 150){
+                            arrows[i]->moveY(2);
+                        }
+
+                        if(arrows[i]->getPosY() == height/2 + 150){
+                            arrows[i]->setPosY(height/2 - 200);
+                        }
+
+                    } else {
+                        arrows[i]->setPosY(height/2);
+                    }
+                }
+            }
+            break;
+        case won:
+            fontRenderer->renderText("You won!", (width/2)-50, (height/2), 1, vec3{0, 1, 0});
+            break;
+        case lose:
+            fontRenderer->renderText("You lose ):", (width/2)-50, (height/2), 1, vec3{1, 0, 1});
+            timeString = "Time: 0";
+            break;
     }
+
+
+    fontRenderer->renderText(levelString, (width/2)-120, (height/2)+135, 1.5, vec3{1, 1, 1});
 
 
     glfwSwapBuffers(window);
@@ -173,13 +213,48 @@ bool Engine::shouldClose() {
     return glfwWindowShouldClose(window);
 }
 
-void Engine::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void Engine::keyCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+    //moving the x value of each arrow
+    float movexNum = -instance->xPixel;
+    int arrowKeys[4] = {GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT};
+    pair <Direction, Direction> arrowDirections;
+
+    //store directions of pressed and current arrow
+    for(int i = 0; i < 4; i++)
     {
-        cout << "YO" << endl;
-        //need instance to interact in static function
-        instance->level1[arrowNum]->setColor(opaque);
+        if(key == arrowKeys[i])
+            arrowDirections.first = Direction(i);
+
+    }
+    arrowDirections.second = instance->arrows[arrowNum]->getDirection();
+
+    //if the directions match make arrow opaque
+    if(arrowDirections.first == arrowDirections.second && action == GLFW_PRESS)
+    {
+        instance->arrows[arrowNum]->setColor(opaque);
         arrowNum++;
-    }`
+
+        for(const auto & i : instance->arrows)
+        {
+            i->moveX(movexNum);
+        }
+    }
+
+
+    if(arrowDirections.first != arrowDirections.second && action == GLFW_PRESS) {
+       //reset
+        instance->arrows.clear();
+        instance->initShapes();
+        arrowNum = 0;
+    }
+
+    //increment level and reset vector (end of level)
+    if(arrowNum == instance->arrows.size()){
+        arrowNum = 0;
+        currentLevel++;
+        instance->arrows.clear();
+        instance->initShapes();
+    }
+
 }
