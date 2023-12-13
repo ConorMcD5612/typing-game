@@ -16,7 +16,7 @@ Conor
 <li> Linux</li>
 <li>Windows</li>
 </ul>
-Installations: Just need the graphics libraries from class 
+<h2>Installations</h2> Just need the graphics libraries from class 
 <h2>Points:</h2> 200
 
 
