@@ -19,4 +19,8 @@ Conor
 <h2>Installations</h2> Just need the graphics libraries from class 
 <h2>Points:</h2> 200
 
-
+<h2>Citations</h2>
+<ul>
+  <li>For the call back function: https://www.glfw.org/docs/3.3/input_guide.html </li>
+  <li>For using engine variables in static function: https://stackoverflow.com/questions/31581200/glfw-call-to-non-static-class-function-in-static-key-callback</li>
+</ul>
